@@ -5,7 +5,9 @@ import time
 import math
 import random
 from collections import Counter
+
 import numpy as np
+import json
 
 Max_iterations = 5
 Wanted_ref_accuracy = 0.99
@@ -222,20 +224,28 @@ def get_pred(pred_probs, length):
         pred = pred + intToDNA[pred_val]
     return pred
 
+def getDNAstrand(strand_list):
+    return "".join([intToDNA[value] for value in strand_list])
+
 #command line: python main.py cluster_file_path substitution_rate insertion_rate deletion_rate similarity with_ref 2_round
 #similarity = 1-subs-ins-dele
 #with_ref is a boolean, to allow using the reference or not
 #2_round is a boolean, to allow the improvement round
 if __name__ == '__main__':
     args = sys.argv
+
     if len(args) != 8:
         print("Invalid Arguments")
 
     else:
-        input = open(args[1])
-        lines = input.readlines()
-        ref = lines[0]
-        cluster = lines[1:]
+
+        f = open(args[1])
+        data = json.load(f)
+        cluster_size = len(data["noisy_copies"])
+        ref = getDNAstrand(data["data"])
+        #ref = get_pred(pred_probs=data["pred_probs"], length=len(label))
+        #res = (label == ref)
+        cluster = data["noisy_copies"]
 
         error_rate = [float(args[2]), float(args[3]), float(args[4]), float(args[5])]
         if args[6] == "True":
@@ -247,28 +257,12 @@ if __name__ == '__main__':
         else:
             second_round = False
 
-        used_ref, evaluation, insertion_hist, deletion_hist, substitution_hist, return_file = Align(ref, cluster, error_rate, with_ref, second_round)
+        used_ref, evaluation, insertion_hist, deletion_hist, substitution_hist, return_file = Align(ref, cluster,
+                                                                                                    error_rate,
+                                                                                                    with_ref,
+                                                                                                    second_round)
 
         print("output file name: " + return_file)
-
-
-
-    """testing the code"""
-    """ref = "CACGCTCAGCATGCGACATGCTCGCGCAGCACGTGTAGCTGTGTCTCACTGCTCTGCTACGAGTGCTAGTGCACACGTGCGCATCTACACAGATATAGACGTGAGCTGTAGTGCTACAGTCGTGCTCAGCAGATGTCTACACGCAGTAGTCATGACACGCTAGTGCACGAGCACGCGATGTCGTCGACTGTAGACGCACACGCGCGTATAGAGACATAGC"
-    cluster = ["TCACCAGGTCAAATCCCACCAATAACATGCGCAGACGTGGCGACGATACCCTTGATTGGTGCTCCACCTTGTCTCCGTTGTCTATCGAGTTGCTTAAGTTCGCCATCGCGCGTCATTCTTACAGCAAGATATAGAATCGTCGCCAGTATTGGCTACAAGTCGTAGCTTCAAGTTAGGACTGTTCTACACAGCAGTTCGTCCAGGCTACCGCTCGTGCAACGAGCCAACGCGATGTTCCGTCGACGTGTACGCCGACGCTGCTGTTAGAAAGTATTAGC"
-               ,"TCCAGGCATCAGTCCTACTGCAGCGGTGTCGGCTACGTGTCTTTTCTTGCACCTAGGGTGCCTTAACGTGCAGGCAGACTGTAGCGAAGTCTACTCAGATGATAGAACGGGATGCGGTAGTGCGACAGTCCGTACCTCAGATGATTGTGCTACTATCAGCATGATTAGTGCATCGAACCACGTCTTGTTGACAGCGAGCACAGCCGAGGTGCGTCGGTCTGCTGAGAACCGGCACACCGGTGTATTAAGACGACATAACC",
-               "ACCATAACCTTCTACCTACTGACGTAAAATTTGACTACAGTCTATAATCAGCGAGAGGTCCTGCCCTCCTACCATCCCGGCTTCTACAGAAAGTGCTCGTGCACACGTGACTGTCATCTAGCACAGATGATACATGTAGAGCTGTACGTGGTTCCAGTCCTGTGCTACGAGCGATGTCTGCGAACGGCAAGTAGGTGTACTGACATCGACTTCCAACGAGCCACAGCGTATGTCGCTGCGTCTGTGAGCACGCCCACGCCGTCGACGTAGTGAGGAGGGGGATTAGGC",
-               "TCTCTTCTCCAACCGTCCTGCGACTATCGGTAACCTCGGATGATAGTCAGGAGATCCTTCAACTTAGTCATATTGCGCTGAATGTTGGCTAGGCTTGGCGAGCAATCGATGGCGGCCATACTGACAACAAGAATAATTAGAGGTGGCTAGTTGAGTTGGCTACAGTCGTGCCTTCGAAACATCGGTCCTGACACGCTAGTCAGTAACCTACTAGTGTCCGAGCAACGACGATGTTCGTCGACCTGTAGCCGCATAAGACGGCGTTCACTGAGAGAGCATCGGC",
-               "CACGCTCAGCATGCGACATGGTCGCGCAGCACGTGTAGCTGTGTCTCACTGCTCTGCTACGTTTGCTAGTGCACACGTGCGCATCTACACAGATTTAGACGTGGGCTGTAGTGCTACAGTCGTGCTCAGCAGATGTCTACACGCAGTAGTCATGACACGCTAGTGCACGAGCACGCGATGTCGTCGACTGTAGACGCACACGCGCGTATAGAGACATAGC"]
-    error_rate = [0.121,0.367,0.0433,0.47]
-
-    used_ref, evaluation, insertion_hist, deletion_hist, substitution_hist, return_file = Align(ref,cluster,error_rate,False,True)
-
-    print("evaluate: " + str(evaluation))"""
-
-
-
-
 
 
 
